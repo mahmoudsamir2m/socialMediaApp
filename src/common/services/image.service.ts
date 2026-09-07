@@ -33,6 +33,11 @@ class ImageService {
     return cloudinaryService.deleteResource(publicId, resourceType);
   }
 
+  async deleteImages(publicIds: string[], resourceType = "image") {
+    const ids = [...new Set(publicIds.filter(Boolean))];
+    await Promise.all(ids.map((publicId) => this.deleteImage(publicId, resourceType)));
+  }
+
   async replaceImage(file: Express.Multer.File, oldPublicId?: string) {
     return cloudinaryService.replaceFile(file, oldPublicId);
   }
