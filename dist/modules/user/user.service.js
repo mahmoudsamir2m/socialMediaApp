@@ -7,6 +7,7 @@ const bcrypt_1 = __importDefault(require("bcrypt"));
 const env_service_1 = require("../../config/env.service");
 const applications_exceptions_1 = require("../../common/exceptions/applications.exceptions");
 const user_model_1 = __importDefault(require("../../database/model/user.model"));
+const cloudinary_service_1 = require("../../common/services/cloudinary.service");
 class UserService {
     userModel;
     constructor() {
@@ -43,10 +44,18 @@ class UserService {
             },
         };
     }
-    async updateProfile(userId, data) {
+    async updateProfile(userId, data, profilePicFile) {
         const user = await this.userModel.findById(userId);
         if (!user) {
             throw new applications_exceptions_1.NotFoundException("User not found");
+        }
+        if (profilePicFile) {
+            const uploadResult = await cloudinary_service_1.cloudinaryService.replaceFile(profilePicFile, user.profilePicPublicId, {
+                folder: `users/${user.email}/profile`,
+                public_id: `profile-${user._id.toString()}`,
+            });
+            user.profilePic = uploadResult.secureUrl;
+            user.profilePicPublicId = uploadResult.publicId;
         }
         if (data.userName !== undefined) {
             user.set("userName", data.userName);
@@ -70,6 +79,9 @@ class UserService {
         const user = await this.userModel.findById(userId).select("+password");
         if (!user) {
             throw new applications_exceptions_1.NotFoundException("User not found");
+        }
+        if (!user.password) {
+            throw new applications_exceptions_1.UnauthorizedException("Current password is incorrect");
         }
         const isMatch = await bcrypt_1.default.compare(data.currentPassword, user.password);
         if (!isMatch) {

@@ -11,6 +11,7 @@ const token_service_1 = require("../../common/services/token.service");
 const generateOTP_service_1 = require("../../common/services/generateOTP.service");
 const user_model_1 = __importDefault(require("../../database/model/user.model"));
 const sendemail_1 = require("../../common/utils/email/sendemail");
+const image_service_1 = __importDefault(require("../../common/services/image.service"));
 class AuthService {
     userModel;
     tokenService;
@@ -27,6 +28,9 @@ class AuthService {
         if (!user) {
             throw new applications_exceptions_1.UnauthorizedException("Invalid email or password");
         }
+        if (!user.password) {
+            throw new applications_exceptions_1.UnauthorizedException("Invalid email or password");
+        }
         const isMatch = await bcrypt_1.default.compare(data.password, user.password);
         if (!isMatch) {
             throw new applications_exceptions_1.UnauthorizedException("Invalid email or password");
@@ -36,7 +40,7 @@ class AuthService {
                 userId: user._id.toString(),
                 email: user.email,
                 userName: `${user.firstName} ${user.lastName}`,
-                subject: "login"
+                subject: "login",
             });
             throw new applications_exceptions_1.ForbiddenException("Please verify your email first");
         }
@@ -55,17 +59,30 @@ class AuthService {
         const tokens = token_service_1.tokenService.refreshTokenPair(data.refreshToken);
         return { ...tokens, user };
     }
-    async signup(data) {
+    async signup(data, profilePicFile) {
         const existingUser = await this.userModel.findOne({ email: data.email });
         if (existingUser) {
             throw new applications_exceptions_1.ConflictException("Email already exists");
         }
         const { confirmPassword, ...userData } = data;
         const hashedPassword = await bcrypt_1.default.hash(userData.password, Number(env_service_1.env.salt));
-        const result = await this.userModel.create({
+        let uploadedProfileImage = null;
+        if (profilePicFile) {
+            const uploadResult = await image_service_1.default.uploadProfileImage(profilePicFile, data.email);
+            uploadedProfileImage = {
+                publicId: uploadResult.publicId,
+                url: uploadResult.secureUrl,
+            };
+        }
+        const userPayload = {
             ...userData,
             password: hashedPassword,
-        });
+        };
+        if (uploadedProfileImage) {
+            userPayload.profilePic = uploadedProfileImage.url;
+            userPayload.profilePicPublicId = uploadedProfileImage.publicId;
+        }
+        const result = await this.userModel.create(userPayload);
         if (!result) {
             throw new applications_exceptions_1.ConflictException("Failed to create user");
         }

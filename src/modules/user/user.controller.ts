@@ -1,4 +1,5 @@
 import { type Request, type Response, Router } from "express";
+import multer from "multer";
 import userService from "./user.service";
 import { SuccessResponse } from "../../common/exceptions/sucsses.response";
 import { authMiddleware } from "../../middleware/auth.middleware";
@@ -9,6 +10,22 @@ import {
   updateProfileSchema,
   userIdParamSchema,
 } from "./user.validation";
+import { BadRequestException } from "../../common/exceptions/applications.exceptions";
+
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: {
+    fileSize: 5 * 1024 * 1024,
+  },
+  fileFilter: (_req, file, cb) => {
+    if (!file.mimetype.startsWith("image/")) {
+      cb(new BadRequestException("Only image files are allowed for profile picture"));
+      return;
+    }
+
+    cb(null, true);
+  },
+});
 
 const router = Router();
 
@@ -25,9 +42,10 @@ router.get("/me", authMiddleware, async (req: Request, res: Response) => {
 router.patch(
   "/me",
   authMiddleware,
+  upload.single("profilePic"),
   validation(updateProfileSchema),
   async (req: Request, res: Response) => {
-    const data = await userService.updateProfile(req.user!.id, req.body);
+    const data = await userService.updateProfile(req.user!.id, req.body, req.file);
     return SuccessResponse({
       res,
       message: "Profile updated",

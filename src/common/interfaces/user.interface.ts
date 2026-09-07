@@ -9,7 +9,9 @@ export interface IUser {
   email: string;
   phone: string;
   profilePic?: string;
+  profilePicPublicId?: string;
   profileCoverPic?: string[];
+  profileCoverPicPublicIds?: string[];
   gender: GenderEnum;
   role?: RoleEnum;
   provider?: ProviderEnum;

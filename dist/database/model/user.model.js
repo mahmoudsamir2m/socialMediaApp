@@ -11,7 +11,9 @@ const userSchema = new mongoose_1.default.Schema({
     email: { type: String, required: true, unique: true },
     phone: { type: String },
     profilePic: { type: String },
+    profilePicPublicId: { type: String },
     profileCoverPic: { type: [String] },
+    profileCoverPicPublicIds: { type: [String] },
     password: {
         type: String,
         required: function () {

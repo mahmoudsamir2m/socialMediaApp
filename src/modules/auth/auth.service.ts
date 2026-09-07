@@ -8,7 +8,10 @@ import {
   ForbiddenException,
   UnauthorizedException,
 } from "../../common/exceptions/applications.exceptions";
-import { tokenService, TokenService } from "../../common/services/token.service";
+import {
+  tokenService,
+  TokenService,
+} from "../../common/services/token.service";
 import {
   generateOtpService,
   GenerateOtpService,
@@ -24,6 +27,7 @@ import {
 import { IUser } from "../../common/interfaces";
 import UserModel from "../../database/model/user.model";
 import { sendEmail } from "../../common/utils/email/sendemail";
+import imageService from "../../common/services/image.service";
 
 class AuthService {
   private userModel: Model<IUser>;
@@ -45,6 +49,10 @@ class AuthService {
       throw new UnauthorizedException("Invalid email or password");
     }
 
+    if (!user.password) {
+      throw new UnauthorizedException("Invalid email or password");
+    }
+
     const isMatch = await bcrypt.compare(data.password, user.password);
     if (!isMatch) {
       throw new UnauthorizedException("Invalid email or password");
@@ -55,7 +63,7 @@ class AuthService {
         userId: user._id.toString(),
         email: user.email,
         userName: `${user.firstName} ${user.lastName}`,
-        subject: "login"
+        subject: "login",
       });
       throw new ForbiddenException("Please verify your email first");
     }
@@ -81,7 +89,7 @@ class AuthService {
     return { ...tokens, user };
   }
 
-  async signup(data: SignupDTO) {
+  async signup(data: SignupDTO, profilePicFile?: Express.Multer.File) {
     const existingUser = await this.userModel.findOne({ email: data.email });
     if (existingUser) {
       throw new ConflictException("Email already exists");
@@ -93,10 +101,31 @@ class AuthService {
       Number(env.salt),
     );
 
-    const result = await this.userModel.create({
+    let uploadedProfileImage: { publicId: string; url: string } | null = null;
+
+    if (profilePicFile) {
+      const uploadResult = await imageService.uploadProfileImage(
+        profilePicFile,
+        data.email,
+      );
+
+      uploadedProfileImage = {
+        publicId: uploadResult.publicId,
+        url: uploadResult.secureUrl,
+      };
+    }
+
+    const userPayload: Partial<IUser> & { password: string } = {
       ...userData,
       password: hashedPassword,
-    });
+    };
+
+    if (uploadedProfileImage) {
+      userPayload.profilePic = uploadedProfileImage.url;
+      userPayload.profilePicPublicId = uploadedProfileImage.publicId;
+    }
+
+    const result = await this.userModel.create(userPayload);
     if (!result) {
       throw new ConflictException("Failed to create user");
     }
@@ -155,7 +184,8 @@ class AuthService {
       user._id.toString(),
     );
 
-    const userName = [user.firstName, user.lastName].filter(Boolean).join(" ") || user.email;
+    const userName =
+      [user.firstName, user.lastName].filter(Boolean).join(" ") || user.email;
 
     await sendEmail({
       to: user.email,

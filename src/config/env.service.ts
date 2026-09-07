@@ -1,7 +1,6 @@
 import { config } from "dotenv";
 import path from "path";
 
-
 config({ path: path.resolve(`./.env.${process.env.NODE_ENV}`) });
 
 const mongoURL = process.env.MONGO_URI as string;
@@ -18,6 +17,7 @@ const BASE_URL = process.env.BASE_URL as string;
 const REDIS_URI = process.env.REDIS_URI as string;
 const APP_PASSWORD = process.env.APP_PASSWORD as string;
 const APP_EMAIL = process.env.APP_EMAIL as string;
+const CLOUDINARY_URL = process.env.CLOUDINARY_URL as string;
 
 export const env = {
   port,
@@ -34,4 +34,5 @@ export const env = {
   REDIS_URI,
   APP_PASSWORD,
   APP_EMAIL,
+  CLOUDINARY_URL,
 };

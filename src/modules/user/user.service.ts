@@ -13,6 +13,7 @@ import type {
   GetUsersQueryDTO,
   UpdateProfileDTO,
 } from "./user.dto";
+import { cloudinaryService } from "../../common/services/cloudinary.service";
 
 class UserService {
   private userModel: Model<IUser>;
@@ -61,11 +62,25 @@ class UserService {
     };
   }
 
-  async updateProfile(userId: string, data: UpdateProfileDTO) {
+  async updateProfile(userId: string, data: UpdateProfileDTO, profilePicFile?: Express.Multer.File) {
     const user = await this.userModel.findById(userId);
 
     if (!user) {
       throw new NotFoundException("User not found");
+    }
+
+    if (profilePicFile) {
+      const uploadResult = await cloudinaryService.replaceFile(
+        profilePicFile,
+        user.profilePicPublicId,
+        {
+          folder: `users/${user.email}/profile`,
+          public_id: `profile-${user._id.toString()}`,
+        },
+      );
+
+      user.profilePic = uploadResult.secureUrl;
+      user.profilePicPublicId = uploadResult.publicId;
     }
 
     if (data.userName !== undefined) {
@@ -94,6 +109,10 @@ class UserService {
 
     if (!user) {
       throw new NotFoundException("User not found");
+    }
+
+    if (!user.password) {
+      throw new UnauthorizedException("Current password is incorrect");
     }
 
     const isMatch = await bcrypt.compare(data.currentPassword, user.password);

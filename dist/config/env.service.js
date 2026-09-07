@@ -21,6 +21,7 @@ const BASE_URL = process.env.BASE_URL;
 const REDIS_URI = process.env.REDIS_URI;
 const APP_PASSWORD = process.env.APP_PASSWORD;
 const APP_EMAIL = process.env.APP_EMAIL;
+const CLOUDINARY_URL = process.env.CLOUDINARY_URL;
 exports.env = {
     port,
     mongoURL,
@@ -36,4 +37,5 @@ exports.env = {
     REDIS_URI,
     APP_PASSWORD,
     APP_EMAIL,
+    CLOUDINARY_URL,
 };

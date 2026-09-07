@@ -4,11 +4,26 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = require("express");
+const multer_1 = __importDefault(require("multer"));
 const user_service_1 = __importDefault(require("./user.service"));
 const sucsses_response_1 = require("../../common/exceptions/sucsses.response");
 const auth_middleware_1 = require("../../middleware/auth.middleware");
 const validation_middleware_1 = require("../../middleware/validation.middleware");
 const user_validation_1 = require("./user.validation");
+const applications_exceptions_1 = require("../../common/exceptions/applications.exceptions");
+const upload = (0, multer_1.default)({
+    storage: multer_1.default.memoryStorage(),
+    limits: {
+        fileSize: 5 * 1024 * 1024,
+    },
+    fileFilter: (_req, file, cb) => {
+        if (!file.mimetype.startsWith("image/")) {
+            cb(new applications_exceptions_1.BadRequestException("Only image files are allowed for profile picture"));
+            return;
+        }
+        cb(null, true);
+    },
+});
 const router = (0, express_1.Router)();
 router.get("/me", auth_middleware_1.authMiddleware, async (req, res) => {
     const data = await user_service_1.default.getMe(req.user.id);
@@ -19,8 +34,8 @@ router.get("/me", auth_middleware_1.authMiddleware, async (req, res) => {
         data,
     });
 });
-router.patch("/me", auth_middleware_1.authMiddleware, (0, validation_middleware_1.validation)(user_validation_1.updateProfileSchema), async (req, res) => {
-    const data = await user_service_1.default.updateProfile(req.user.id, req.body);
+router.patch("/me", auth_middleware_1.authMiddleware, upload.single("profilePic"), (0, validation_middleware_1.validation)(user_validation_1.updateProfileSchema), async (req, res) => {
+    const data = await user_service_1.default.updateProfile(req.user.id, req.body, req.file);
     return (0, sucsses_response_1.SuccessResponse)({
         res,
         message: "Profile updated",
