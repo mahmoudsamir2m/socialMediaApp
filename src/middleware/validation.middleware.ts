@@ -6,8 +6,8 @@ type ValidationKey = keyof Request;
 type ValidationSchema = Partial<Record<ValidationKey, ZodType>>;
 
 export const validation = (schema: ValidationSchema) => {
-  return (req: Request, res: Response, next: NextFunction) => {
-    let validationErrors: { key: ValidationKey; issue: ZodError["issues"] }[] =
+  return (req: Request, _res: Response, next: NextFunction) => {
+    const validationErrors: { key: ValidationKey; issue: ZodError["issues"] }[] =
       [];
     for (const key of Object.keys(schema) as ValidationKey[]) {
       if (!schema[key]) {

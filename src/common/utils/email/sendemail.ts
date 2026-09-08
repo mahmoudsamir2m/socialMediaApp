@@ -15,8 +15,6 @@ export let sendEmail = async ({
     },
   });
   try {
-    console.log("Email From Env:", env.APP_EMAIL);
-    console.log("Password From Env:", env.APP_PASSWORD);
     const info = await transporter.sendMail({
       from: `"mahmoud samir" <${env.APP_EMAIL}>`,
       to,

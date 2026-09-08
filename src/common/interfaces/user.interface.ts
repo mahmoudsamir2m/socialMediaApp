@@ -15,6 +15,7 @@ export interface IUser {
   role?: RoleEnum;
   provider?: ProviderEnum;
   confirmEmail: boolean;
+  tokenVersion?: number;
   createdAt?: Date;
   updatedAt?: Date;
 }

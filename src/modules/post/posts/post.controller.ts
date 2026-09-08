@@ -1,8 +1,10 @@
 import { type Request, type Response, Router } from "express";
-import multer from "multer";
-import { BadRequestException } from "../../../common/exceptions/applications.exceptions";
 import { SuccessResponse } from "../../../common/exceptions/sucsses.response";
 import { authMiddleware } from "../../../middleware/auth.middleware";
+import {
+  imageUpload,
+  uploadedFiles,
+} from "../../../middleware/upload.middleware";
 import { validation } from "../../../middleware/validation.middleware";
 import commentService from "../comments/comment.service";
 import postLikeService from "../post-likes/post-like.service";
@@ -18,28 +20,12 @@ import {
   updatePostSchema,
 } from "./post.validation";
 
-const uploadedFiles = (req: Request) => {
-  return (Array.isArray(req.files) ? req.files : []) as Express.Multer.File[];
-};
-
-const upload = multer({
-  storage: multer.memoryStorage(),
-  limits: { fileSize: 5 * 1024 * 1024, files: 10 },
-  fileFilter: (_req, file, cb) => {
-    if (!file.mimetype.startsWith("image/")) {
-      cb(new BadRequestException("Only image files are allowed"));
-      return;
-    }
-
-    cb(null, true);
-  },
-});
-
 const router = Router();
+
 router.post(
   "/",
   authMiddleware,
-  upload.array("images", 10),
+  imageUpload.array("images", 10),
   validation(createPostSchema),
   async (req: Request, res: Response) => {
     const data = await postService.create(
@@ -83,7 +69,7 @@ router.get(
 router.patch(
   "/:id",
   authMiddleware,
-  upload.array("images", 10),
+  imageUpload.array("images", 10),
   validation({ ...postIdSchema, ...updatePostSchema }),
   async (req: Request, res: Response) => {
     const data = await postService.update(

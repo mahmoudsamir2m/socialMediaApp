@@ -9,6 +9,7 @@ export enum FriendRequestStatus {
 export interface IFriendRequest {
   sender: Types.ObjectId;
   receiver: Types.ObjectId;
+  pairKey: string;
   status: FriendRequestStatus;
   createdAt?: Date;
   updatedAt?: Date;
@@ -26,6 +27,7 @@ const friendRequestSchema = new mongoose.Schema<IFriendRequest>(
       ref: "User",
       required: true,
     },
+    pairKey: { type: String, required: true, unique: true },
     status: {
       type: String,
       enum: Object.values(FriendRequestStatus),

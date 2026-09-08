@@ -46,6 +46,7 @@ export class TokenService {
       return {
         id: decoded.id,
         role: decoded.role,
+        tokenVersion: decoded.tokenVersion ?? 0,
       };
     } catch {
       throw new UnauthorizedException(`Invalid or expired ${type} token`);

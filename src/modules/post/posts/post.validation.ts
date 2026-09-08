@@ -14,7 +14,16 @@ export const postCommentIdSchema = {
 export const commentIdSchema = {
   params: z.strictObject({ commentId: objectId }),
 };
-export const feedSchema = { query: pagination };
+export const feedSchema = {
+  query: pagination.extend({
+    scope: z.enum(["friends", "all"]).default("friends"),
+    author: objectId.optional(),
+  }),
+};
+export const likesSchema = {
+  query: pagination,
+  params: z.strictObject({ id: objectId }),
+};
 export const commentsSchema = {
   query: pagination,
   params: z.strictObject({ postId: objectId }),

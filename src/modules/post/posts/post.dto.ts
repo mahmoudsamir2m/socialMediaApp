@@ -1,6 +1,8 @@
 export interface PaginationDTO {
   page: number;
   limit: number;
+  scope?: "friends" | "all";
+  author?: string | undefined;
 }
 export interface CreatePostDTO {
   content?: string;

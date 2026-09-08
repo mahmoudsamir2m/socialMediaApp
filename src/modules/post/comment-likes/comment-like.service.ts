@@ -2,12 +2,14 @@ import {
   ConflictException,
   NotFoundException,
 } from "../../../common/exceptions/applications.exceptions";
+import { NotificationType } from "../../../common/enums";
 import { CommentLikeModel } from "../../../database/model/comment-like.model";
 import { CommentModel } from "../../../database/model/comment.model";
+import notificationService from "../../notification/notification.service";
 class CommentLikeService {
   async like(commentId: string, userId: string) {
-    if (!(await CommentModel.exists({ _id: commentId })))
-      throw new NotFoundException("Comment not found");
+    const comment = await CommentModel.findById(commentId).select("author");
+    if (!comment) throw new NotFoundException("Comment not found");
     try {
       await CommentLikeModel.create({ comment: commentId, user: userId });
     } catch (error: unknown) {
@@ -15,6 +17,13 @@ class CommentLikeService {
         throw new ConflictException("Comment is already liked");
       throw error;
     }
+    await notificationService.create({
+      recipient: comment.author.toString(),
+      actor: userId,
+      type: NotificationType.CommentLike,
+      entityId: commentId,
+      entityType: "comment",
+    });
     return this.status(commentId, userId);
   }
   async unlike(commentId: string, userId: string) {

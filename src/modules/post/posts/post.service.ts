@@ -10,6 +10,8 @@ import { PostLikeModel } from "../../../database/model/post-like.model";
 import { CommentModel } from "../../../database/model/comment.model";
 import { CommentLikeModel } from "../../../database/model/comment-like.model";
 import type { CreatePostDTO, PaginationDTO, UpdatePostDTO } from "./post.dto";
+import blockService from "../../block/block.service";
+import friendService from "../../friend/friend.service";
 
 const asArray = (value?: string | string[]) => {
   if (!value) return [];
@@ -63,19 +65,46 @@ class PostService {
   async getById(id: string, viewerId?: string) {
     if (!(await PostModel.exists({ _id: id })))
       throw new NotFoundException("Post not found");
-    return this.hydrate([id], viewerId).then((posts) => posts[0]);
+    const [post] = await this.hydrate([id], viewerId);
+    if (!post) throw new NotFoundException("Post not found");
+    if (viewerId) {
+      const authorId = post.author?._id?.toString?.() ?? post.author?.toString();
+      if (authorId && (await blockService.isBlocked(viewerId, authorId))) {
+        throw new ForbiddenException("You cannot view this post");
+      }
+    }
+    return post;
   }
 
-  async getFeed(query: PaginationDTO, viewerId?: string) {
+  async getFeed(query: PaginationDTO, viewerId: string) {
     const skip = (query.page - 1) * query.limit;
+    const blocked = await blockService.ids(viewerId);
+    const filter: Record<string, unknown> = {};
+    if (blocked.length) filter.author = { $nin: blocked };
+
+    if (query.author) {
+      if (await blockService.isBlocked(viewerId, query.author)) {
+        throw new ForbiddenException("You cannot view this user's posts");
+      }
+      filter.author = query.author;
+    } else if (query.scope !== "all") {
+      const friends = await friendService.friendIds(viewerId);
+      filter.author = { $in: [viewerId, ...friends] };
+      if (blocked.length) {
+        filter.author = {
+          $in: [viewerId, ...friends.filter((id) => !blocked.includes(id))],
+        };
+      }
+    }
+
     const [posts, total] = await Promise.all([
-      PostModel.find()
+      PostModel.find(filter)
         .sort({ createdAt: -1, _id: -1 })
         .skip(skip)
         .limit(query.limit)
         .select("_id")
         .lean(),
-      PostModel.countDocuments(),
+      PostModel.countDocuments(filter),
     ]);
     const hydrated = await this.hydrate(
       posts.map((post) => post._id.toString()),
@@ -90,6 +119,10 @@ class PostService {
         totalPages: Math.ceil(total / query.limit),
       },
     };
+  }
+
+  async getByAuthor(userId: string, query: PaginationDTO, viewerId: string) {
+    return this.getFeed({ ...query, author: userId, scope: "all" }, viewerId);
   }
 
   async update(
@@ -190,7 +223,20 @@ class PostService {
         $lookup: {
           from: "comments",
           let: { postId: "$_id" },
-          pipeline: [{ $match: { $expr: { $eq: ["$post", "$$postId"] } } }],
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $and: [
+                    { $eq: ["$post", "$$postId"] },
+                    {
+                      $eq: [{ $ifNull: ["$parentComment", null] }, null],
+                    },
+                  ],
+                },
+              },
+            },
+          ],
           as: "comments",
         },
       },

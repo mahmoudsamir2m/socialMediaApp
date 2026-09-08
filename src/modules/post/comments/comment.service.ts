@@ -3,10 +3,12 @@ import {
   ForbiddenException,
   NotFoundException,
 } from "../../../common/exceptions/applications.exceptions";
+import { NotificationType } from "../../../common/enums";
 import { CommentModel } from "../../../database/model/comment.model";
 import { CommentLikeModel } from "../../../database/model/comment-like.model";
 import { PostModel } from "../../../database/model/post.model";
 import type { CreateCommentDTO, PaginationDTO } from "../posts/post.dto";
+import notificationService from "../../notification/notification.service";
 
 class CommentService {
   async add(
@@ -24,12 +26,26 @@ class CommentService {
       if (parent.parentComment)
         throw new ForbiddenException("Replies can only be one level deep");
     }
-    return CommentModel.create({
+    const comment = await CommentModel.create({
       post: postId,
       author,
       content: data.content,
       ...(parentCommentId ? { parentComment: parentCommentId } : {}),
     });
+    const post = await PostModel.findById(postId).select("author");
+    await notificationService.create({
+      recipient: parentCommentId
+        ? (await CommentModel.findById(parentCommentId).select("author"))
+            ?.author.toString() ?? post?.author.toString() ?? ""
+        : post?.author.toString() ?? "",
+      actor: author,
+      type: parentCommentId
+        ? NotificationType.CommentReply
+        : NotificationType.Comment,
+      entityId: comment._id.toString(),
+      entityType: "comment",
+    });
+    return comment;
   }
   async list(
     postId: string,

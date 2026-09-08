@@ -88,6 +88,9 @@ export class GenerateOtpService {
     purpose = "verify",
   }: VerifyOtpParams): Promise<boolean> {
     const hashOtp = await this.redis.get(this.otpKey(userId, purpose));
+    if (!hashOtp) {
+      return false;
+    }
     return bcrypt.compare(otp, String(hashOtp));
   }
 
@@ -117,6 +120,9 @@ export class GenerateOtpService {
     }
 
     const hashed = await this.redis.get(key);
+    if (!hashed) {
+      return false;
+    }
     return bcrypt.compare(token, String(hashed));
   }
 

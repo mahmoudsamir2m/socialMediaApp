@@ -1,7 +1,11 @@
 import type { Request, Response, NextFunction } from "express";
 import { tokenService } from "../common/services/token.service";
-import { UnauthorizedException } from "../common/exceptions/applications.exceptions";
+import {
+  ForbiddenException,
+  UnauthorizedException,
+} from "../common/exceptions/applications.exceptions";
 import type { TokenPayload } from "../common/interfaces";
+import UserModel from "../database/model/user.model";
 
 declare global {
   namespace Express {
@@ -11,7 +15,7 @@ declare global {
   }
 }
 
-export const authMiddleware = (
+export const authMiddleware = async (
   req: Request,
   _res: Response,
   next: NextFunction,
@@ -28,6 +32,27 @@ export const authMiddleware = (
     throw new UnauthorizedException("Access token is required");
   }
 
-  req.user = tokenService.verifyAccessToken(token);
+  const payload = tokenService.verifyAccessToken(token);
+  const user = await UserModel.findById(payload.id).select(
+    "tokenVersion confirmEmail role",
+  );
+
+  if (!user) {
+    throw new UnauthorizedException("Invalid access token");
+  }
+
+  if ((user.tokenVersion ?? 0) !== (payload.tokenVersion ?? 0)) {
+    throw new UnauthorizedException("Session expired");
+  }
+
+  if (!user.confirmEmail) {
+    throw new ForbiddenException("Please verify your email first");
+  }
+
+  req.user = {
+    id: user._id.toString(),
+    role: user.role ?? payload.role,
+    tokenVersion: user.tokenVersion ?? 0,
+  };
   next();
 };
