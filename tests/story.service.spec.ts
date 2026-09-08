@@ -1,6 +1,10 @@
 jest.mock("../src/database/model/story.model", () => ({
   StoryModel: { create: jest.fn(), findOne: jest.fn(), findById: jest.fn() },
-  StoryViewModel: { updateOne: jest.fn(), find: jest.fn(), deleteMany: jest.fn() },
+  StoryViewModel: {
+    updateOne: jest.fn(),
+    find: jest.fn(),
+    deleteMany: jest.fn(),
+  },
 }));
 
 jest.mock("../src/common/services/image.service", () => ({
@@ -26,7 +30,9 @@ import storyService from "../src/modules/story/story.service";
 
 describe("StoryService", () => {
   it("requires an image when creating a story", async () => {
-    await expect(storyService.create("user-1", undefined)).rejects.toMatchObject({
+    await expect(
+      storyService.create("user-1", undefined),
+    ).rejects.toMatchObject({
       status: 403,
       message: "Story image is required",
     });

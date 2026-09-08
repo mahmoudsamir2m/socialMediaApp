@@ -48,7 +48,9 @@ describe("NotificationService", () => {
   it("creates a notification when users are not blocked", async () => {
     const notification = { _id: "notification-1" };
     jest.mocked(BlockModel.exists).mockResolvedValue(false);
-    jest.mocked(NotificationModel.create).mockResolvedValue(notification as never);
+    jest
+      .mocked(NotificationModel.create)
+      .mockResolvedValue(notification as never);
 
     await expect(
       notificationService.create({

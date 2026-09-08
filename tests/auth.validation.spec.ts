@@ -1,7 +1,4 @@
-import {
-  loginSchema,
-  signupSchema,
-} from "../src/modules/auth/auth.validation";
+import { loginSchema, signupSchema } from "../src/modules/auth/auth.validation";
 
 describe("auth validation", () => {
   it("accepts a valid signup payload", () => {
