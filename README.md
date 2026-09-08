@@ -92,6 +92,30 @@ The default server URL is:
 http://localhost:3000
 ```
 
+## Testing
+
+The project uses Jest with SWC to run TypeScript tests without requiring MongoDB or Redis for unit tests.
+
+Run the test suite once:
+
+```bash
+npm test
+```
+
+Run Jest in watch mode while developing:
+
+```bash
+npm run test:watch
+```
+
+Generate an HTML and terminal coverage report:
+
+```bash
+npm run test:coverage
+```
+
+Tests are stored in the `tests/` directory and use the `*.spec.ts` naming convention.
+
 ## Authentication
 
 Protected endpoints require the access token in the `Authorization` header:

@@ -1,0 +1,13 @@
+process.env.NODE_ENV = "test";
+process.env.PORT = "3000";
+process.env.MONGO_URI = "mongodb://127.0.0.1:27017/social-media-test";
+process.env.REDIS_URI = "redis://127.0.0.1:6379";
+process.env.SALT = "4";
+process.env.JWT_KEY = "test-jwt-key";
+process.env.JWT_USER_SIGNATURE = "test-user-access-secret";
+process.env.JWT_ADMIN_SIGNATUER = "test-admin-access-secret";
+process.env.JWT_USER_REFRESH_SIGNATURE = "test-user-refresh-secret";
+process.env.JWT_ADMIN_REFRESH_SIGNATURE = "test-admin-refresh-secret";
+process.env.APP_EMAIL = "test@example.com";
+process.env.APP_PASSWORD = "test-password";
+process.env.CLOUDINARY_URL = "cloudinary://test:test@test-cloud";
