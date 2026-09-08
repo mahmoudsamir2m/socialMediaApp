@@ -1,0 +1,16 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.commentSchema = exports.updatePostSchema = exports.createPostSchema = exports.repliesSchema = exports.commentsSchema = exports.feedSchema = exports.commentIdSchema = exports.postCommentIdSchema = exports.postIdSchema = void 0;
+const zod_1 = require("zod");
+const objectId = zod_1.z.string().regex(/^[0-9a-fA-F]{24}$/, "Invalid MongoDB id");
+const pagination = zod_1.z.strictObject({ page: zod_1.z.coerce.number().int().min(1).default(1), limit: zod_1.z.coerce.number().int().min(1).max(50).default(20) });
+const optionalContent = zod_1.z.string().trim().min(1).max(5000).optional();
+exports.postIdSchema = { params: zod_1.z.strictObject({ id: objectId }) };
+exports.postCommentIdSchema = { params: zod_1.z.strictObject({ postId: objectId }) };
+exports.commentIdSchema = { params: zod_1.z.strictObject({ commentId: objectId }) };
+exports.feedSchema = { query: pagination };
+exports.commentsSchema = { query: pagination, params: zod_1.z.strictObject({ postId: objectId }) };
+exports.repliesSchema = { query: pagination, params: zod_1.z.strictObject({ commentId: objectId }) };
+exports.createPostSchema = { body: zod_1.z.object({ content: optionalContent }).strip() };
+exports.updatePostSchema = { body: zod_1.z.object({ content: optionalContent, removeImagePublicIds: zod_1.z.union([zod_1.z.array(zod_1.z.string().min(1)).max(10), zod_1.z.string()]).optional(), replaceImages: zod_1.z.union([zod_1.z.boolean(), zod_1.z.string()]).optional() }).strip() };
+exports.commentSchema = { body: zod_1.z.strictObject({ content: zod_1.z.string().trim().min(1).max(2000) }) };

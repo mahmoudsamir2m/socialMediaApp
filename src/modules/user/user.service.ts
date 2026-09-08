@@ -62,7 +62,11 @@ class UserService {
     };
   }
 
-  async updateProfile(userId: string, data: UpdateProfileDTO, profilePicFile?: Express.Multer.File) {
+  async updateProfile(
+    userId: string,
+    data: UpdateProfileDTO,
+    profilePicFile?: Express.Multer.File,
+  ) {
     const user = await this.userModel.findById(userId);
 
     if (!user) {

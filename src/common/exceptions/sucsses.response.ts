@@ -1,4 +1,4 @@
-import type{ Response } from "express";
+import type { Response } from "express";
 
 export const SuccessResponse = ({
   res,
@@ -11,8 +11,8 @@ export const SuccessResponse = ({
   status?: number;
   data?: any;
 }) => {
-return res.status(status).json({
+  return res.status(status).json({
     message,
     data,
-})
+  });
 };

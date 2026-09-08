@@ -20,7 +20,11 @@ const upload = multer({
   },
   fileFilter: (_req, file, cb) => {
     if (!file.mimetype.startsWith("image/")) {
-      cb(new BadRequestException("Only image files are allowed for profile picture"));
+      cb(
+        new BadRequestException(
+          "Only image files are allowed for profile picture",
+        ),
+      );
       return;
     }
 
@@ -30,10 +34,19 @@ const upload = multer({
 
 const router = Router();
 
-router.post("/login", validation(loginSchema), async (req: Request, res: Response) => {
-  const data = await authService.login(req.body);
-  return SuccessResponse({ res, message: "Login success", status: 200, data });
-});
+router.post(
+  "/login",
+  validation(loginSchema),
+  async (req: Request, res: Response) => {
+    const data = await authService.login(req.body);
+    return SuccessResponse({
+      res,
+      message: "Login success",
+      status: 200,
+      data,
+    });
+  },
+);
 
 router.post(
   "/signup",
@@ -41,7 +54,12 @@ router.post(
   validation(signupSchema),
   async (req: Request, res: Response) => {
     const data = await authService.signup(req.body, req.file);
-    return SuccessResponse({ res, message: "Signup success", status: 201, data });
+    return SuccessResponse({
+      res,
+      message: "Signup success",
+      status: 201,
+      data,
+    });
   },
 );
 

@@ -19,7 +19,11 @@ const upload = multer({
   },
   fileFilter: (_req, file, cb) => {
     if (!file.mimetype.startsWith("image/")) {
-      cb(new BadRequestException("Only image files are allowed for profile picture"));
+      cb(
+        new BadRequestException(
+          "Only image files are allowed for profile picture",
+        ),
+      );
       return;
     }
 
@@ -45,7 +49,11 @@ router.patch(
   upload.single("profilePic"),
   validation(updateProfileSchema),
   async (req: Request, res: Response) => {
-    const data = await userService.updateProfile(req.user!.id, req.body, req.file);
+    const data = await userService.updateProfile(
+      req.user!.id,
+      req.body,
+      req.file,
+    );
     return SuccessResponse({
       res,
       message: "Profile updated",

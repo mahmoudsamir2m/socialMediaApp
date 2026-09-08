@@ -2,7 +2,6 @@ import mongoose from "mongoose";
 import { IUser } from "../../common/interfaces";
 import { GenderEnum, RoleEnum, ProviderEnum } from "../../common/enums";
 
-
 const userSchema = new mongoose.Schema<IUser>(
   {
     firstName: { type: String },

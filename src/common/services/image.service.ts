@@ -35,7 +35,9 @@ class ImageService {
 
   async deleteImages(publicIds: string[], resourceType = "image") {
     const ids = [...new Set(publicIds.filter(Boolean))];
-    await Promise.all(ids.map((publicId) => this.deleteImage(publicId, resourceType)));
+    await Promise.all(
+      ids.map((publicId) => this.deleteImage(publicId, resourceType)),
+    );
   }
 
   async replaceImage(file: Express.Multer.File, oldPublicId?: string) {

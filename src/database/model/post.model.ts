@@ -17,16 +17,31 @@ export interface IPost {
 }
 
 const imageSchema = new mongoose.Schema<IPostImage>(
-  { secureUrl: { type: String, required: true }, publicId: { type: String, required: true }, width: Number, height: Number },
+  {
+    secureUrl: { type: String, required: true },
+    publicId: { type: String, required: true },
+    width: Number,
+    height: Number,
+  },
   { _id: false },
 );
 
 const postSchema = new mongoose.Schema<IPost>(
   {
-    author: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true, index: true },
+    author: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+      index: true,
+    },
     content: { type: String, trim: true, maxlength: 5000 },
     images: { type: [imageSchema], default: [] },
-    originalPost: { type: mongoose.Schema.Types.ObjectId, ref: "Post", default: undefined, index: true },
+    originalPost: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Post",
+      default: undefined,
+      index: true,
+    },
   },
   { timestamps: true },
 );

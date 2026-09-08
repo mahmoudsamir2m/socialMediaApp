@@ -1,0 +1,25 @@
+"use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = require("express");
+const sucsses_response_1 = require("../../common/exceptions/sucsses.response");
+const auth_middleware_1 = require("../../middleware/auth.middleware");
+const validation_middleware_1 = require("../../middleware/validation.middleware");
+const friend_service_1 = __importDefault(require("./friend.service"));
+const zod_1 = require("zod");
+const id = zod_1.z.string().regex(/^[0-9a-fA-F]{24}$/);
+const userParam = { params: zod_1.z.object({ userId: id }) };
+const requestParam = { params: zod_1.z.object({ requestId: id }) };
+const router = (0, express_1.Router)();
+router.post("/requests/:userId", auth_middleware_1.authMiddleware, (0, validation_middleware_1.validation)(userParam), async (req, res) => (0, sucsses_response_1.SuccessResponse)({ res, status: 201, message: "Friend request sent", data: await friend_service_1.default.send(req.user.id, req.params.userId) }));
+router.get("/requests/received", auth_middleware_1.authMiddleware, async (req, res) => (0, sucsses_response_1.SuccessResponse)({ res, data: await friend_service_1.default.list(req.user.id, "received") }));
+router.get("/requests/sent", auth_middleware_1.authMiddleware, async (req, res) => (0, sucsses_response_1.SuccessResponse)({ res, data: await friend_service_1.default.list(req.user.id, "sent") }));
+router.patch("/requests/:requestId/accept", auth_middleware_1.authMiddleware, (0, validation_middleware_1.validation)(requestParam), async (req, res) => (0, sucsses_response_1.SuccessResponse)({ res, data: await friend_service_1.default.accept(req.params.requestId, req.user.id) }));
+router.patch("/requests/:requestId/reject", auth_middleware_1.authMiddleware, (0, validation_middleware_1.validation)(requestParam), async (req, res) => (0, sucsses_response_1.SuccessResponse)({ res, data: await friend_service_1.default.reject(req.params.requestId, req.user.id) }));
+router.delete("/requests/:requestId", auth_middleware_1.authMiddleware, (0, validation_middleware_1.validation)(requestParam), async (req, res) => (0, sucsses_response_1.SuccessResponse)({ res, data: await friend_service_1.default.cancel(req.params.requestId, req.user.id) }));
+router.get("/", auth_middleware_1.authMiddleware, async (req, res) => (0, sucsses_response_1.SuccessResponse)({ res, data: await friend_service_1.default.list(req.user.id, "friends") }));
+router.get("/status/:userId", auth_middleware_1.authMiddleware, (0, validation_middleware_1.validation)(userParam), async (req, res) => (0, sucsses_response_1.SuccessResponse)({ res, data: await friend_service_1.default.status(req.user.id, req.params.userId) }));
+router.delete("/:userId", auth_middleware_1.authMiddleware, (0, validation_middleware_1.validation)(userParam), async (req, res) => (0, sucsses_response_1.SuccessResponse)({ res, data: await friend_service_1.default.remove(req.user.id, req.params.userId) }));
+exports.default = router;

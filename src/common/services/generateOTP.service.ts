@@ -27,7 +27,9 @@ export class GenerateOtpService {
   constructor(private readonly redis: RedisService = redisService) {}
 
   otpKey(userId: string, purpose: OtpPurpose = "verify") {
-    return purpose === "verify" ? `otp::${userId}` : `otp::${purpose}::${userId}`;
+    return purpose === "verify"
+      ? `otp::${userId}`
+      : `otp::${purpose}::${userId}`;
   }
 
   resetTokenKey(userId: string) {
@@ -72,7 +74,10 @@ export class GenerateOtpService {
     return true;
   }
 
-  async exists(userId: string, purpose: OtpPurpose = "verify"): Promise<boolean> {
+  async exists(
+    userId: string,
+    purpose: OtpPurpose = "verify",
+  ): Promise<boolean> {
     const count = await this.redis.exists(this.otpKey(userId, purpose));
     return count > 0;
   }
